@@ -53,8 +53,8 @@
 
 <ul>
 <li>Flight Data Source and Preparation</li>
-<li>Input Factors Selection</li>
-<li>Sample Output</li>
+<li>Input Factor Selection</li>
+<li>Potential Enhancements</li>
 </ul>
 
   </article>
@@ -63,15 +63,16 @@
 
 <slide class="" id="slide-2" style="background:;">
   <hgroup>
-    <h2>Flight Data Source</h2>
+    <h2>Flight Data Source and Preparation</h2>
   </hgroup>
   <article data-timings="">
     <p>The US Department of Transportation Bureau of Transportation Statistics gathers data on virtually all scheduled flights between points in the United States and territories.</p>
 
 <ul>
-<li>Data include scheduled and actual departure and arrival times, wheels-up, wheels-on time, and whether the flight was cancelled or diverted to another destination.</li>
-<li>Monthly data is available from 1995 through November, 2014 (as of January 20, 2015) and covers &gt;500 thousand flights per month.</li>
+<li>Flight data from December 2013 through November 2014 was downloaded from the DOT website into monthly zip files.</li>
+<li>The data was compiled into a dataframe of 5.86 million flights. The script is not embedded in this presentation but can be viewed <a href="https://github.com/tboomer/FlightDelay">DataPrep.R</a></li>
 <li>For the purposes of this analysis and application, flight outcomes were grouped into four categories: On-time, Delayed, Diverted, or Cancelled</li>
+<li>The data was subset twice because of performance issues. Fields were reduced to only those required by the application because of shiny.io storage limits and the number of airports and carriers was minimized because shiny.io would freeze during the calculations.</li>
 </ul>
 
   </article>
@@ -80,30 +81,36 @@
 
 <slide class="" id="slide-3" style="background:;">
   <hgroup>
-    <h2>Flight Data Preparation</h2>
+    <h2>Input Factor Selection</h2>
   </hgroup>
   <article data-timings="">
-    
+    <p>Different parameters were reviewed to determine which ones to use for user selection. For example.</p>
+
+<p><img src="assets/fig/unnamed-chunk-3-1.png" alt="plot of chunk unnamed-chunk-3"> </p>
+
   </article>
   <!-- Presenter Notes -->
 </slide>
 
 <slide class="" id="slide-4" style="background:;">
   <hgroup>
-    <h2>Input Factor Selection</h2>
-  </hgroup>
-  <article data-timings="">
-    
-  </article>
-  <!-- Presenter Notes -->
-</slide>
-
-<slide class="" id="slide-5" style="background:;">
-  <hgroup>
     <h2>Potential Enhancements</h2>
   </hgroup>
   <article data-timings="">
-    
+    <p>Several UI enhancements were identified but not yet implemented because of the time required debugging the application and slidify.</p>
+
+<ul>
+<li>Improve error handling when no flights match the search criteria</li>
+<li>Add a lookup of carrier and airport codes</li>
+</ul>
+
+<p>Possible functionality enhancements include:</p>
+
+<ul>
+<li>Chunking and aggregating data to improve performance and allow an expanded range of airports and carriers to be supported.</li>
+<li>Add conditional criteria such as &quot;is there a departure delay?&quot;</li>
+</ul>
+
   </article>
   <!-- Presenter Notes -->
 </slide>
@@ -120,26 +127,20 @@
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=2 title='Flight Data Source'>
+        data-slide=2 title='Flight Data Source and Preparation'>
          2
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=3 title='Flight Data Preparation'>
+        data-slide=3 title='Input Factor Selection'>
          3
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=4 title='Input Factor Selection'>
+        data-slide=4 title='Potential Enhancements'>
          4
-      </a>
-    </li>
-    <li>
-      <a href="#" target="_self" rel='tooltip' 
-        data-slide=5 title='Potential Enhancements'>
-         5
       </a>
     </li>
   </ul>
