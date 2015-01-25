@@ -30,8 +30,11 @@ shinyServer(
                                         DEP_HOUR == input$dephour) %>%
                               group_by(ORIGIN, DEST, UNIQUE_CARRIER, DEP_HOUR, RESULT) %>%
                               summarise(n=n()) %>%
-                              mutate(freq = n / sum(n))
+                              mutate(freq = paste(round(100*n / sum(n),1),"%"))
                         stats <- data.frame(stats)
+                        names(stats) <- c("Origin", "Destination", "Carrier", "DepartHour", 
+                              "Result", "Number of Flights", "Percent")
+                        stats[,5:7]
                   })
             })
             output$diff <- renderPlot({
@@ -40,14 +43,16 @@ shinyServer(
                   delstats <- filter(small, ORIGIN == input$depcode,
                                      DEST == input$arrcode,
                                      UNIQUE_CARRIER == input$carrier,
-                                     DEP_HOUR == input$dephour, (RESULT=="delayed"
-                                                                 | RESULT=="ontime")) %>%
+                                     DEP_HOUR == input$dephour, 
+                                     RESULT=="delayed") %>%
                         group_by(ORIGIN, DEST, UNIQUE_CARRIER, DEP_HOUR, ARR_DELAY) %>%
                         summarise(n=n()) %>%
                         mutate(freq = n / sum(n))
                   
                   qplot(ARR_DELAY, data=filter(delstats), 
-                        geom="histogram", binwidth = 15)
+                        geom="histogram", binwidth = 15, xlab = "Delay (Minutes)",
+                        ylab = "Number of Delayed Flights", 
+                        main="Delayed Flights: 1-Year History")
             })
       }
 )
