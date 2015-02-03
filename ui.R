@@ -1,13 +1,15 @@
 # ui.R Code
+airport <- c("ATL","BOS","BWI","CLT","DEN","DFW","DTW","EWR","IAH","JFK",
+             "LAS","LAX","LGA","MCO","MSP","ORD","PHX","SEA","SFO","SLC")
 shinyUI(fluidPage(
       headerPanel("Flight Delay Probability"),
-      sidebarPanel(
+            sidebarPanel(
             selectInput(inputId="depcode", label="Departure Airport Code",
-                        choices = c("LGA", "DTW")),
+                        choices = airport),
             selectInput(inputId="arrcode", label="Destination Airport Code",
-                        choices = c("LGA", "DTW")),
+                        choices = airport),
             selectInput(inputId="carrier", label="Two Letter Airline Code",
-                        choices = c("AA","DL")),
+                        choices = c("DL","AA")),
             sliderInput(inputId="dephour", label="Departure Hour: 0=Midnight to 23=11:00 PM",
                         min=5, value=12, max=23, step=1),
             actionButton("calcButton", "Show Results")
@@ -15,14 +17,6 @@ shinyUI(fluidPage(
       mainPanel(
             tabsetPanel(                  
                   tabPanel("Main",
-                        p("Departure Airport"),
-                        textOutput("depcode"),
-                        p("Arrival Airport"),
-                        textOutput("arrcode"),
-                        p("Airline"),
-                        textOutput("carrier"),
-                        p("Departure Hour"),
-                        textOutput("dephour"),
                         dataTableOutput("result"),
                         plotOutput("diff")
                         ),

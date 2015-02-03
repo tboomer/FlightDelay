@@ -7,24 +7,27 @@ load("smallfltdata.rda")
 
 # Scratch code
 # sumdata <- group_by(small, ORIGIN, DEST, UNIQUE_CARRIER, DEP_HOUR, RESULT)
-# input <- list(depcode = "LGA", arrcode = "DTW", carrier = "DL", dephour = 7)
+# input <- list(depcode = "LGA", arrcode = "DTW", carrier = "DL", dephour = 7) #for debugging
 
 # Create vectors to validate input
-orgcodes <- unique(small$ORIGIN)
-descodes <- unique(small$DEST)
-small <- filter(small, ORIGIN %in% c("LGA", "DTW"), DEST %in% c("LGA", "DTW"))
+# orgcodes <- unique(small$ORIGIN)
+# descodes <- unique(small$DEST)
+airport <- c("ATL","BOS","BWI","CLT","DEN","DFW","DTW","EWR","IAH","JFK",
+             "LAS","LAX","LGA","MCO","MSP","ORD","PHX","SEA","SFO","SLC")
 
 shinyServer(
       function(input, output) {
-            output$depcode <- renderText({input$depcode})
-            output$arrcode <- renderText({input$arrcode})
-            output$carrier <- renderText({input$carrier})
-            output$dephour <- renderText({input$dephour})
-            
+            data <- reactive({
+                  validate(
+                        need(input$depcode != input$arrcode, 
+                             "Select Departure and Arrival airport codes.")
+                        )
+                  filter(small, ORIGIN %in% airport, DEST %in% airport)
+            })
             output$result <- renderDataTable({
                   input$calcButton
                   isolate({
-                        stats <- filter(small, ORIGIN == input$depcode,
+                        stats <- filter(data(), ORIGIN == input$depcode,
                                         DEST == input$arrcode,
                                         UNIQUE_CARRIER == input$carrier,
                                         DEP_HOUR == input$dephour) %>%
@@ -38,9 +41,9 @@ shinyServer(
                   })
             })
             output$diff <- renderPlot({
-                  if(input$calcButton == 0)
-                        return()
-                  delstats <- filter(small, ORIGIN == input$depcode,
+                  input$calcButton
+                  isolate({
+                  delstats <- filter(data(), ORIGIN == input$depcode,
                                      DEST == input$arrcode,
                                      UNIQUE_CARRIER == input$carrier,
                                      DEP_HOUR == input$dephour, 
@@ -53,6 +56,7 @@ shinyServer(
                         geom="histogram", binwidth = 15, xlab = "Delay (Minutes)",
                         ylab = "Number of Delayed Flights", 
                         main="Delayed Flights: 1-Year History")
+                  })
             })
       }
 )
