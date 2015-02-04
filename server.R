@@ -16,9 +16,22 @@ library(ggplot2)
 library(dplyr)
 load("smallfltdata.rda")
 
+airport <- matrix(c("ATL","BOS","BWI","CLT","DEN","DFW","DTW","EWR","IAH","JFK",
+                    "LAS","LAX","LGA","MCO","MSP","ORD","PHX","SEA","SFO","SLC", 
+                    "Atlanta", "Boston", "Baltimore/Washington Intl.", "Charlotte",
+                    "Denver", "Dallas/Fort Worth", "Detroit", "Newark Intl.","Houston",
+                    "NY-JFK", "Las Vegas", "Los Angeles", "NY-LaGuardia", "Orlando",
+                    "Minneapolis/St. Paul", "Chicago-OHare", "Phoenix", "Seattle",
+                    "San Francisco", "Salt Lake City"), 20,2, byrow=FALSE)
+airline <- matrix(c("AA", "DL", "UA", "US", "WN", "American Airlines", "Delta",
+                    "United Airlines", "USAir", "Southwest Airlines"), 5,2, byrow=FALSE)
+
 # Server Code
 shinyServer(
       function(input, output) {
+            output$deptxt <- renderText({airport[which(airport[,1]==input$depcode),2]})
+            output$arrtxt <- renderText({airport[which(airport[,1]==input$arrcode),2]})
+            output$carrtxt <- renderText({airline[which(airline[,1]==input$carrier),2]})
             # Validate inputs and return data table
             data <- reactive({
                   validate(
@@ -34,7 +47,7 @@ shinyServer(
                         DEP_HOUR == input$dephour)
             })
             # Render results in a data table
-            output$result <- renderDataTable({
+            output$result <- renderTable({
                   input$calcButton
                   isolate({
                         stats <- group_by(data(), ORIGIN, DEST, UNIQUE_CARRIER, DEP_HOUR, RESULT) %>%
@@ -45,7 +58,7 @@ shinyServer(
                               "Result", "Number of Flights", "Percent")
                         stats[,5:7]
                   })
-            })
+            }, include.rownames=FALSE)
             # Render histogram of delay length for delayed flights
             output$diff <- renderPlot({
                   input$calcButton
@@ -57,8 +70,8 @@ shinyServer(
                   
                   qplot(ARR_DELAY, data=filter(delstats), 
                         geom="histogram", binwidth = 15, xlab = "Delay (Minutes)",
-                        ylab = "Number of Delayed Flights", 
-                        main="Delayed Flights: 1-Year History")
+                        ylab = "Number of Flights", 
+                        main="Delayed Flights: Delay in Minutes")
                   })
             })
       }

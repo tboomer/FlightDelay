@@ -10,20 +10,26 @@
 # GNU General Public License for more details.
 
 # Define scope of airports and carriers.
-airport <- c("ATL","BOS","BWI","CLT","DEN","DFW","DTW","EWR","IAH","JFK",
-             "LAS","LAX","LGA","MCO","MSP","ORD","PHX","SEA","SFO","SLC")
-airline <- c("AA", "DL", "UA", "US", "WN")
+airport <- matrix(c("ATL","BOS","BWI","CLT","DEN","DFW","DTW","EWR","IAH","JFK",
+             "LAS","LAX","LGA","MCO","MSP","ORD","PHX","SEA","SFO","SLC", 
+             "Atlanta", "Boston", "Baltimore/Washington Intl.", "Charlotte",
+             "Denver", "Dallas/Fort Worth", "Detroit", "Newark Intl.","Houston",
+             "NY-JFK", "Las Vegas", "Los Angeles", "NY-LaGuardia", "Orlando",
+             "Minneapolis/St. Paul", "Chicago-OHare", "Phoenix", "Seattle",
+             "San Francisco", "Salt Lake City"), 20,2, byrow=FALSE)
+airline <- matrix(c("AA", "DL", "UA", "US", "WN", "American Airlines", "Delta",
+                    "United Airlines", "USAir", "Southwest Airlines"), 5,2, byrow=FALSE)
 
 # UI Code
 shinyUI(fluidPage(
-      headerPanel("Flight Delay Probability"),
+      headerPanel("Flight Delay History"),
             sidebarPanel(
             selectInput(inputId="depcode", label="Departure Airport Code",
-                        choices = airport),
+                        choices = airport[,1]),
             selectInput(inputId="arrcode", label="Destination Airport Code",
-                        choices = airport),
+                        choices = airport[,1]),
             selectInput(inputId="carrier", label="Two Letter Airline Code",
-                        choices = airline),
+                        choices = airline[,1]),
             sliderInput(inputId="dephour", label="Departure Hour: 0=Midnight to 23=11:00 PM",
                         min=5, value=12, max=23, step=1),
             actionButton("calcButton", "Show Results")
@@ -31,14 +37,19 @@ shinyUI(fluidPage(
       mainPanel(
             tabsetPanel(                  
                   tabPanel("Main",
-                        dataTableOutput("result"),
+                        h3("Input Values"),
+                        p("Departure Airport: ", textOutput("deptxt", inline=TRUE)),
+                        p("Arrival Airport: ", textOutput("arrtxt", inline=TRUE)),
+                        p("Airline: ", textOutput("carrtxt", inline=TRUE)),
+                        h3("Flight Results-One Year History"),
+                        tableOutput("result"),
                         plotOutput("diff")
                         ),
                   tabPanel("Documentation",
                      p("This application summarizes the historical outcomes 
                        over 1 year for flights between the two airports for the selected 
                        departure hour and carrier. Due to performance 
-                       constraints on the shiny server, only a small subset 
+                       constraints on the shiny server, only a subset 
                        of airports and carriers are available."),
                      p("1. Select the departure and arrival airport code"),
                      p("2. Select the departure hour on a 24 hour scale (23=11PM)"),
