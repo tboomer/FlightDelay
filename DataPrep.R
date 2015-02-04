@@ -42,11 +42,15 @@ data$ARR_HOUR <- as.factor(data$CRS_ARR_TIME %/% 100)
 # Save data file
 save(data, file = "flightdata.rda")
 
-# Subset data for smaller file
-small <- data[,-c(3, 9, 10:17, 19:30)]
+# Subset data for smaller file required by application
+small <- data[,-c(3, 9, 10:17, 19:30)] # Eliminate columns not required by app
+airport <- c("ATL","BOS","BWI","CLT","DEN","DFW","DTW","EWR","IAH","JFK",
+             "LAS","LAX","LGA","MCO","MSP","ORD","PHX","SEA","SFO","SLC")
+airline <- c("AA", "DL")
+small <- filter(small, UNIQUE_CARRIER %in% airline, ORIGIN %in% airport, DEST %in% airport)
 
 # Adjust result so arrival delay > 12 hours are "cancelled"
-for(i in 1:nrow(small)) if(!is.na(small$ARR_DELAY[i]) & small$ARR_DELAY[i] >= 12*60) 
+for(i in 1:nrow(small)) if(!is.na(small$ARR_DELAY[i]) & small$ARR_DELAY[i] >= 12*60)
       small$RESULT[i] = "cancelled"
 
 save(small, file="smallfltdata.rda")

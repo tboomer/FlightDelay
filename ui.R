@@ -1,6 +1,8 @@
 # ui.R Code
 airport <- c("ATL","BOS","BWI","CLT","DEN","DFW","DTW","EWR","IAH","JFK",
              "LAS","LAX","LGA","MCO","MSP","ORD","PHX","SEA","SFO","SLC")
+airline <- c("AA", "DL")
+
 shinyUI(fluidPage(
       headerPanel("Flight Delay Probability"),
             sidebarPanel(

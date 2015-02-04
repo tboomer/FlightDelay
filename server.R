@@ -22,16 +22,15 @@ shinyServer(
                         need(input$depcode != input$arrcode, 
                              "Select Departure and Arrival airport codes.")
                         )
-                  filter(small, ORIGIN %in% airport, DEST %in% airport)
+                  filter(small, ORIGIN == input$depcode,
+                        DEST == input$arrcode,
+                        UNIQUE_CARRIER == input$carrier,
+                        DEP_HOUR == input$dephour)
             })
             output$result <- renderDataTable({
                   input$calcButton
                   isolate({
-                        stats <- filter(data(), ORIGIN == input$depcode,
-                                        DEST == input$arrcode,
-                                        UNIQUE_CARRIER == input$carrier,
-                                        DEP_HOUR == input$dephour) %>%
-                              group_by(ORIGIN, DEST, UNIQUE_CARRIER, DEP_HOUR, RESULT) %>%
+                        stats <- group_by(data(), ORIGIN, DEST, UNIQUE_CARRIER, DEP_HOUR, RESULT) %>%
                               summarise(n=n()) %>%
                               mutate(freq = paste(round(100*n / sum(n),1),"%"))
                         stats <- data.frame(stats)
@@ -43,11 +42,7 @@ shinyServer(
             output$diff <- renderPlot({
                   input$calcButton
                   isolate({
-                  delstats <- filter(data(), ORIGIN == input$depcode,
-                                     DEST == input$arrcode,
-                                     UNIQUE_CARRIER == input$carrier,
-                                     DEP_HOUR == input$dephour, 
-                                     RESULT=="delayed") %>%
+                  delstats <- filter(data(), RESULT=="delayed") %>%
                         group_by(ORIGIN, DEST, UNIQUE_CARRIER, DEP_HOUR, ARR_DELAY) %>%
                         summarise(n=n()) %>%
                         mutate(freq = n / sum(n))
