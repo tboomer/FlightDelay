@@ -66,7 +66,8 @@ shinyUI(fluidPage(
                      p("This program comes with ABSOLUTELY NO WARRANTY.
                         This is free software, and you are welcome to redistribute it
                         under certain conditions;", a(href="https://github.com/tboomer/FlightDelay/blob/master/LICENSE.htm",
-                        "Click Here"), "for details.")
+                        "Click Here"), "for details."),
+                     p("Source Data: US Dept. of Transportation Airline On-Time Statistics")
                      )
                   )
       )
