@@ -1,32 +1,39 @@
-# server.R Code
+# Flight Delay server.R Code
+# FlightDelay ui.R Code
+# Copyright (C) 2015 Timothy Boomer
+# This program is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU General Public License for more details.
+
 # Load libraries, scripts, and data
 library(shiny)
 library(ggplot2)
 library(dplyr)
 load("smallfltdata.rda")
 
-# Scratch code
-# sumdata <- group_by(small, ORIGIN, DEST, UNIQUE_CARRIER, DEP_HOUR, RESULT)
-# input <- list(depcode = "LGA", arrcode = "DTW", carrier = "DL", dephour = 7) #for debugging
-
-# Create vectors to validate input
-# orgcodes <- unique(small$ORIGIN)
-# descodes <- unique(small$DEST)
-airport <- c("ATL","BOS","BWI","CLT","DEN","DFW","DTW","EWR","IAH","JFK",
-             "LAS","LAX","LGA","MCO","MSP","ORD","PHX","SEA","SFO","SLC")
-
+# Server Code
 shinyServer(
       function(input, output) {
+            # Validate inputs and return data table
             data <- reactive({
                   validate(
-                        need(input$depcode != input$arrcode, 
-                             "Select Departure and Arrival airport codes.")
+                        need(nrow(filter(small, ORIGIN == input$depcode,
+                                    DEST == input$arrcode,
+                                    UNIQUE_CARRIER == input$carrier,
+                                    DEP_HOUR == input$dephour))>0, 
+                             "There is no data for the selected inputs.")
                         )
                   filter(small, ORIGIN == input$depcode,
                         DEST == input$arrcode,
                         UNIQUE_CARRIER == input$carrier,
                         DEP_HOUR == input$dephour)
             })
+            # Render results in a data table
             output$result <- renderDataTable({
                   input$calcButton
                   isolate({
@@ -39,6 +46,7 @@ shinyServer(
                         stats[,5:7]
                   })
             })
+            # Render histogram of delay length for delayed flights
             output$diff <- renderPlot({
                   input$calcButton
                   isolate({
@@ -55,3 +63,6 @@ shinyServer(
             })
       }
 )
+
+# Scratch code for debugging
+# input <- list(depcode = "LGA", arrcode = "DTW", carrier = "DL", dephour = 7) 
