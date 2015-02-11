@@ -13,6 +13,7 @@
 # Load libraries, scripts, and data
 library(shiny)
 library(ggplot2)
+library(scales)
 library(dplyr)
 load("smallfltdata.rda")
 
@@ -33,37 +34,51 @@ shinyServer(
             output$arrtxt <- renderText({airport[which(airport[,1]==input$arrcode),2]})
             output$carrtxt <- renderText({airline[which(airline[,1]==input$carrier),2]})
             # Validate inputs and return data table
-            data <- reactive({
+            day.data <- reactive({
                   validate(
-                        need(nrow(filter(small, ORIGIN == input$depcode,
+                       need(nrow(filter(small, ORIGIN == input$depcode,
                                     DEST == input$arrcode,
-                                    UNIQUE_CARRIER == input$carrier,
-                                    DEP_HOUR == input$dephour))>0, 
-                             "There is no data for the selected inputs.")
+                                    UNIQUE_CARRIER == input$carrier))>0, 
+                             "There is no data for the selected route and carrier."
                         )
+                  )
                   filter(small, ORIGIN == input$depcode,
-                        DEST == input$arrcode,
-                        UNIQUE_CARRIER == input$carrier,
-                        DEP_HOUR == input$dephour)
+                         DEST == input$arrcode,
+                         UNIQUE_CARRIER == input$carrier
+                  )
             })
-            # Render results in a data table
-            output$result <- renderTable({
+            hour.data <- reactive({
+                  validate(
+                        need(nrow(filter(day.data(), DEP_HOUR == input$dephour))>0,
+                              "There is no data for the selected hour"
+                        )
+                  )
+                  filter(day.data(), DEP_HOUR == input$dephour)
+            })
+
+            # Output graph of results by hour
+            output$result <- renderPlot({
                   input$calcButton
                   isolate({
-                        stats <- group_by(data(), ORIGIN, DEST, UNIQUE_CARRIER, DEP_HOUR, RESULT) %>%
+                        stats <- group_by(day.data(), ORIGIN, DEST, UNIQUE_CARRIER, DEP_HOUR, RESULT) %>%
                               summarise(n=n()) %>%
                               mutate(freq = paste(round(100*n / sum(n),1),"%"))
                         stats <- data.frame(stats)
                         names(stats) <- c("Origin", "Destination", "Carrier", "DepartHour", 
-                              "Result", "Number of Flights", "Percent")
-                        stats[,5:7]
+                              "Result", "NumberofFlights", "Percent")
+                  ggplot(stats, aes(color, x=DepartHour, y=NumberofFlights, fill=Result)) +
+                        geom_bar(stat="identity", position = "fill") +
+                        scale_fill_manual(values=c("#CC0000", "#996633", "#006699", "#66CC66")) +
+                        scale_y_continuous(labels = percent_format()) +
+                        labs(title="Flight Results by Hour") +
+                        ylab("Percent of Flights") + xlab("Departure Hour")
+                        })
                   })
-            }, include.rownames=FALSE)
             # Render histogram of delay length for delayed flights
             output$diff <- renderPlot({
                   input$calcButton
                   isolate({
-                  delstats <- filter(data(), RESULT=="delayed") %>%
+                  delstats <- filter(hour.data(), RESULT=="delayed") %>%
                         group_by(ORIGIN, DEST, UNIQUE_CARRIER, DEP_HOUR, ARR_DELAY) %>%
                         summarise(n=n()) %>%
                         mutate(freq = n / sum(n))
@@ -76,6 +91,3 @@ shinyServer(
             })
       }
 )
-
-# Scratch code for debugging
-# input <- list(depcode = "LGA", arrcode = "DTW", carrier = "DL", dephour = 7) 

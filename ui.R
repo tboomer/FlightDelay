@@ -42,25 +42,24 @@ shinyUI(fluidPage(
                         p("Arrival Airport: ", textOutput("arrtxt", inline=TRUE)),
                         p("Airline: ", textOutput("carrtxt", inline=TRUE)),
                         h3("Flight Results-One Year History"),
-                        tableOutput("result"),
+                        plotOutput("result"),
                         plotOutput("diff")
                         ),
                   tabPanel("Documentation",
-                     p("This application summarizes the historical outcomes 
-                       over 1 year for flights between the two airports for the selected 
-                       departure hour and carrier. Due to performance 
-                       constraints on the shiny server, only a subset 
-                       of airports and carriers are available."),
-                     p("1. Select the departure and arrival airport code"),
-                     p("2. Select the departure hour on a 24 hour scale (23=11PM)"),
+                     p("This application summarizes US commercial flight statistics for one year (from
+                        Dec, 2013 through Nov, 2014) To use the application:"),
+                     p("1. Select the departure and arrival airport codes and airline."),
+                     p("2. Select the departure hour on a 24 hour scale (23=11PM)."),
                      p("3. Press Show Results"),
-                     p("The table summarizes the outcome for flights matching the criteria."),
-                     p("The histogram summarizes how many minutes delayed flights were delayed"),
+                     p("The top chart summarizes flight outcomes for the selected route and carrier
+                       by hour."),
+                     p("The histogram looks at delayed flights departed during the selected hour 
+                        and displays the distribution of the arrival delay in minutes."),
                      h4("Version History"),
                      p("The original version of this application was the course project submission
                         for the Johns Hopkins Data Products in January, 2015. 
-                        This version--2Feb2015--is an update that expands the selections 
-                        to include flights between the top 10 airports for the top 5 carriers."),
+                        This version--11Feb2015--expands the range of airports and carriers and 
+                        adds the graph showing outcomes by hour."),
                      h4("Further Details"),
                      p("Copyright (C) 2015 Timothy Boomer"),
                      p("This program comes with ABSOLUTELY NO WARRANTY.
