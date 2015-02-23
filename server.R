@@ -66,9 +66,10 @@ shinyServer(
                         stats <- data.frame(stats)
                         names(stats) <- c("Origin", "Destination", "Carrier", "DepartHour", 
                               "Result", "NumberofFlights", "Percent")
+
                   ggplot(stats, aes(color, x=DepartHour, y=NumberofFlights, fill=Result)) +
                         geom_bar(stat="identity", position = "fill") +
-                        scale_fill_manual(values=c("#CC0000", "#996633", "#006699", "#66CC66")) +
+                        scale_fill_manual(values=c("#66CC66", "#996633", "#006699", "#CC0000")) +
                         scale_y_continuous(labels = percent_format()) +
                         labs(title="Flight Results by Hour") +
                         ylab("Percent of Flights") + xlab("Departure Hour")
@@ -83,10 +84,13 @@ shinyServer(
                         summarise(n=n()) %>%
                         mutate(freq = n / sum(n))
                   
-                  qplot(ARR_DELAY, data=filter(delstats), 
-                        geom="histogram", binwidth = 15, xlab = "Delay (Minutes)",
-                        ylab = "Number of Flights", 
-                        main="Delayed Flights: Delay in Minutes")
+                  ggplot(delstats, aes(ARR_DELAY)) + geom_histogram(binwidth = 15) +
+                        scale_x_continuous(breaks = round(seq(0, max(delstats$ARR_DELAY, 
+                                                                     na.rm=TRUE), by = 60),1)) +
+                        ggtitle("Delayed Flights: Delay in Minutes") +
+                        xlab("Delay (Minutes)") + 
+                        ylab("Number of Flights")
+                        
                   })
             })
       }

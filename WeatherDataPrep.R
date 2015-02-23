@@ -1,4 +1,4 @@
-# This script opens downloaded DOT files and builds the database for
+# This script opens downloaded NOAA files and builds the database for
 # the FlightDelay application. Data was downloaded by month in the specified
 # directory from the DOT website.
 # Working Directory: The working directory needs to be the folder with 
@@ -9,30 +9,41 @@ library(dplyr)
 # Read and append files from December, 2013 through November, 2014
 # Data files are downloaded by month at the DOT website. The suffix
 # -YYYYMM is appended to the file name for the script to process the files.
-# Files are downloaded from: 
-# http://www.transtats.bts.gov/DL_SelectFields.asp?Table_ID=236&DB_Short_Name=On-Time
-# Select the same data fields as flightdata.rda
 
 # Read first file
-monthdat <- read.csv(unzip("T_ONTIME-201401.zip"), header=TRUE)
+monthdat <- read.csv(unzip("QCLCD201312.zip", files="201312daily.txt"), header=TRUE)
 data <- monthdat
-print(length(monthdat))
 
 # Read and append data from subsequent files
-print("month columns")
-for(i in 2:12) {
+for(i in 1:11) {
       per <- as.integer(201400 + i)
-      filename <- paste("T_ONTIME-",per, ".zip", sep = "")
-      monthdat <- read.csv(unzip(filename), header=TRUE)
-      print(c(i, length(monthdat)))
+      zipfilename <- paste("QCLCD", per, ".zip", sep = "")
+      filename <- paste(per, "daily.txt", sep="")
+      monthdat <- read.csv(unzip(zipfilename, files = filename), header = TRUE)
       data <- rbind(data, monthdat)
 }
-# Convert variable types
-data$FL_DATE <- as.Date(data$FL_DATE, "%Y-%m-%d")
-data$DIVERTED <- as.logical(data$DIVERTED)
-data$CANCELLED <- as.logical(data$CANCELLED)
 
-data$DELAYED <- data$ARR_DELAY > 10 # Create logical variable for delayed
+# Read station data file
+station <- read.table(unzip("QCLCD201411.zip", files="201411station.txt"), 
+                      header=TRUE, sep="|", quote="")
+station.lookup <- station[,c(1,3)]
+wdata <- left_join(wdata, station.lookup, by="WBAN") #test this result
+#____________________________________________
+
+# Create variables
+data$Date <- as.Date(data$YearMonthDay, "%Y%m%d")
+datalength <- nrow(wdata)
+rain <- vector("logical", datalength)
+rain[grep("RA", wdata$CodeSum)] <- TRUE
+wdata <- cbind(wdata, rain)
+snow <- vector("logical", datalength)
+snow[grep("SN", wdata$CodeSum)] <- TRUE
+wdata <- cbind(wdata, snow)
+tstorm <- vector("logical", datalength)
+tstorm[grep("TS", wdata$CodeSum)] <- TRUE
+wdata <- cbind(wdata, tstorm)
+
+data$DELAYED <- data$ARR_DELAY > 0 # Create logical variable for delayed
 
 # Create RESULT factor variable.
 RESULT <- rep("ontime", nrow(data))
@@ -57,6 +68,5 @@ small <- filter(small, UNIQUE_CARRIER %in% airline, ORIGIN %in% airport, DEST %i
 # Adjust result so arrival delay > 12 hours are "cancelled"
 for(i in 1:nrow(small)) if(!is.na(small$ARR_DELAY[i]) & small$ARR_DELAY[i] >= 12*60)
       small$RESULT[i] = "cancelled"
-small$RESULT <- factor(small$RESULT, levels(small$RESULT)[c(4,2,3,1)]) #Reorder for plotting
 
 save(small, file="smallfltdata.rda") # Save small for use by the application

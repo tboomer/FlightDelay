@@ -46,8 +46,8 @@ shinyUI(fluidPage(
                         plotOutput("diff")
                         ),
                   tabPanel("Documentation",
-                     p("This application summarizes US commercial flight statistics for one year (from
-                        Dec, 2013 through Nov, 2014) To use the application:"),
+                     p("This application summarizes US commercial flight statistics for Jan through
+                        Dec, 2014. To use the application:"),
                      p("1. Select the departure and arrival airport codes and airline."),
                      p("2. Select the departure hour on a 24 hour scale (23=11PM)."),
                      p("3. Press Show Results"),
@@ -58,8 +58,7 @@ shinyUI(fluidPage(
                      h4("Version History"),
                      p("The original version of this application was the course project submission
                         for the Johns Hopkins Data Products in January, 2015. 
-                        This version--11Feb2015--expands the range of airports and carriers and 
-                        adds the graph showing outcomes by hour."),
+                        This version--23Feb2015--adds December, 2014 data and reformats the charts."), 
                      h4("Further Details"),
                      p("Copyright (C) 2015 Timothy Boomer"),
                      p("This program comes with ABSOLUTELY NO WARRANTY.
