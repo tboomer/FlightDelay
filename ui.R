@@ -26,12 +26,14 @@ shinyUI(fluidPage(
             sidebarPanel(
             selectInput(inputId="depcode", label="Departure Airport Code",
                         choices = airport[,1]),
+            selectInput(inputId="depweather", label="Departure Weather",
+                        choices = c("Other", "Thunderstorm", "Snow")),
             selectInput(inputId="arrcode", label="Destination Airport Code",
                         choices = airport[,1]),
+            selectInput(inputId="arrweather", label="Arrival Weather",
+                        choices = c("Other", "Thunderstorm", "Snow")),
             selectInput(inputId="carrier", label="Two Letter Airline Code",
                         choices = airline[,1]),
-            sliderInput(inputId="dephour", label="Departure Hour: 0=Midnight to 23=11:00 PM",
-                        min=5, value=12, max=23, step=1),
             actionButton("calcButton", "Show Results")
       ),
       mainPanel(
@@ -43,29 +45,31 @@ shinyUI(fluidPage(
                         p("Airline: ", textOutput("carrtxt", inline=TRUE)),
                         h3("Flight Results-One Year History"),
                         plotOutput("result"),
-                        plotOutput("diff")
+                        plotOutput("diff"),
+                        p("Note: Includes only flights delayed more than 10 minutes.")
                         ),
                   tabPanel("Documentation",
                      p("This application summarizes US commercial flight statistics for Jan through
                         Dec, 2014. To use the application:"),
                      p("1. Select the departure and arrival airport codes and airline."),
-                     p("2. Select the departure hour on a 24 hour scale (23=11PM)."),
+                     p("2. Select whether there are thunderstorms or snow at either airport."),
                      p("3. Press Show Results"),
                      p("The top chart summarizes flight outcomes for the selected route and carrier
                        by hour."),
-                     p("The histogram looks at delayed flights departed during the selected hour 
-                        and displays the distribution of the arrival delay in minutes."),
+                     p("The histogram looks at flights that arrived more than 10 minutes late and displays
+                       the distribution of the arrival delay."),
                      h4("Version History"),
                      p("The original version of this application was the course project submission
                         for the Johns Hopkins Data Products in January, 2015. 
-                        This version--23Feb2015--adds December, 2014 data and reformats the charts."), 
+                        This version--6Mar2015--adds the filter for weather conditions."), 
                      h4("Further Details"),
                      p("Copyright (C) 2015 Timothy Boomer"),
                      p("This program comes with ABSOLUTELY NO WARRANTY.
                         This is free software, and you are welcome to redistribute it
                         under certain conditions;", a(href="https://github.com/tboomer/FlightDelay/blob/master/LICENSE.htm",
                         "Click Here"), "for details."),
-                     p("Source Data: US Dept. of Transportation Airline On-Time Statistics")
+                     p("Source Data: US Dept. of Transportation Airline On-Time Statistics and 
+                       NOAA National Climactic Data Center")
                      )
                   )
       )

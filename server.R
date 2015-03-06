@@ -37,23 +37,19 @@ shinyServer(
             day.data <- reactive({
                   validate(
                        need(nrow(filter(small, ORIGIN == input$depcode,
-                                    DEST == input$arrcode,
-                                    UNIQUE_CARRIER == input$carrier))>0, 
+                                        DepWeatherCode == input$depweather,
+                                        DEST == input$arrcode,
+                                        ArrWeatherCode == input$arrweather,
+                                          UNIQUE_CARRIER == input$carrier))>0, 
                              "There is no data for the selected route and carrier."
                         )
                   )
                   filter(small, ORIGIN == input$depcode,
+                         DepWeatherCode == input$depweather,
                          DEST == input$arrcode,
+                         ArrWeatherCode == input$arrweather,
                          UNIQUE_CARRIER == input$carrier
                   )
-            })
-            hour.data <- reactive({
-                  validate(
-                        need(nrow(filter(day.data(), DEP_HOUR == input$dephour))>0,
-                              "There is no data for the selected hour"
-                        )
-                  )
-                  filter(day.data(), DEP_HOUR == input$dephour)
             })
 
             # Output graph of results by hour
@@ -79,7 +75,7 @@ shinyServer(
             output$diff <- renderPlot({
                   input$calcButton
                   isolate({
-                  delstats <- filter(hour.data(), RESULT=="delayed") %>%
+                  delstats <- filter(day.data(), RESULT=="delayed") %>%
                         group_by(ORIGIN, DEST, UNIQUE_CARRIER, DEP_HOUR, ARR_DELAY) %>%
                         summarise(n=n()) %>%
                         mutate(freq = n / sum(n))
@@ -87,11 +83,11 @@ shinyServer(
                   ggplot(delstats, aes(ARR_DELAY)) + geom_histogram(binwidth = 15) +
                         scale_x_continuous(breaks = round(seq(0, max(delstats$ARR_DELAY, 
                                                                      na.rm=TRUE), by = 60),1)) +
-                        ggtitle("Delayed Flights: Delay in Minutes") +
+                        ggtitle("Delayed Flights Only: Delay in Minutes") +
                         xlab("Delay (Minutes)") + 
                         ylab("Number of Flights")
-                        
                   })
             })
       }
 )
+

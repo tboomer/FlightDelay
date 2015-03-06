@@ -2,71 +2,80 @@
 # the FlightDelay application. Data was downloaded by month in the specified
 # directory from the DOT website.
 # Working Directory: The working directory needs to be the folder with 
-# the downloaded data files.
+# the downloaded data files. Files are downloaded from:
+# http://cdo.ncdc.noaa.gov/qclcd_ascii/
 
 library(dplyr)
+library(stringr)
 
 # Read and append files from December, 2013 through November, 2014
 # Data files are downloaded by month at the DOT website. The suffix
 # -YYYYMM is appended to the file name for the script to process the files.
 
 # Read first file
-monthdat <- read.csv(unzip("QCLCD201312.zip", files="201312daily.txt"), header=TRUE)
-data <- monthdat
-
+monthdat <- read.csv(unzip("QCLCD201401.zip", files="201401daily.txt"), header=TRUE,
+                     stringsAsFactors = FALSE)
+wdata <- monthdat
+print("Month Number Completed")
 # Read and append data from subsequent files
-for(i in 1:11) {
+for(i in 2:12) {
       per <- as.integer(201400 + i)
       zipfilename <- paste("QCLCD", per, ".zip", sep = "")
       filename <- paste(per, "daily.txt", sep="")
-      monthdat <- read.csv(unzip(zipfilename, files = filename), header = TRUE)
-      data <- rbind(data, monthdat)
+      monthdat <- read.csv(unzip(zipfilename, files = filename), header = TRUE,
+                           stringsAsFactors = FALSE)
+      wdata <- rbind(wdata, monthdat)
+      print(i)
 }
 
-# Read station data file
+# Convert variable types
+wdata$YearMonthDay <- as.Date(as.character(wdata$YearMonthDay), "%Y%m%d")
+numcol <- c(3,5,7,29,31,41,43,47)
+for (i in numcol) {
+      wdata[,i] <- as.numeric(wdata[,i])
+}
+
+
+# Read station data file to create WBAN to CallSign lookup
 station <- read.table(unzip("QCLCD201411.zip", files="201411station.txt"), 
-                      header=TRUE, sep="|", quote="")
+                      header=TRUE, sep="|", quote="", comment.char="")
 station.lookup <- station[,c(1,3)]
-wdata <- left_join(wdata, station.lookup, by="WBAN") #test this result
-#____________________________________________
 
-# Create variables
-data$Date <- as.Date(data$YearMonthDay, "%Y%m%d")
-datalength <- nrow(wdata)
-rain <- vector("logical", datalength)
-rain[grep("RA", wdata$CodeSum)] <- TRUE
-wdata <- cbind(wdata, rain)
-snow <- vector("logical", datalength)
-snow[grep("SN", wdata$CodeSum)] <- TRUE
-wdata <- cbind(wdata, snow)
-tstorm <- vector("logical", datalength)
-tstorm[grep("TS", wdata$CodeSum)] <- TRUE
-wdata <- cbind(wdata, tstorm)
+# Join CallSign to wdata
+wdata <- left_join(wdata, station.lookup, by="WBAN")
+wdata$CallSign <- as.factor(wdata$CallSign)
+save(wdata, file="fullweatherdata.RData")
 
-data$DELAYED <- data$ARR_DELAY > 0 # Create logical variable for delayed
+# Subset weather data for airport stations
+load("fullweatherdata.RData")
+load("flightdata.rda")  # Load flight data
+airports <- unique(data$ORIGIN) # Create factor vector of airports
+sub_wdata <- filter(wdata, CallSign %in% airports) # Select only stations at airports
+fields <- c(2, 23, 29, 31, 41, 43, 51)
+sub_wdata <- select(sub_wdata, fields)
 
-# Create RESULT factor variable.
-RESULT <- rep("ontime", nrow(data))
-for(i in 1:nrow(data)) if(!is.na(data$CANCELLED[i]) & (data$CANCELLED[i]==TRUE)) RESULT[i] = "cancelled"
-for(i in 1:nrow(data)) if(!is.na(data$DIVERTED[i]) & (data$DIVERTED[i]==TRUE)) RESULT[i] = "diverted"
-for(i in 1:nrow(data)) if(!is.na(data$DELAYED[i]) & (data$DELAYED[i]==TRUE)) RESULT[i] = "delayed"
-RESULT <- as.factor(RESULT)
-data <- cbind(data, RESULT)
-data$DEP_HOUR <- as.factor(data$CRS_DEP_TIME %/% 100) # Convert departure hour to factor
-data$ARR_HOUR <- as.factor(data$CRS_ARR_TIME %/% 100) # Convert arrival hour to factor
+# Join weather data for departure and arrival airports to flight statistics
+m_wdata <- sub_wdata
+names(m_wdata) <- paste("dep_", names(sub_wdata), sep="")
+data <- left_join(data, m_wdata, by = c("FL_DATE"="dep_YearMonthDay", "ORIGIN"="dep_CallSign"))
+names(m_wdata) <- paste("arr_", names(sub_wdata), sep="")
+data <- left_join(data, m_wdata, by = c("FL_DATE"="arr_YearMonthDay", "DEST"="arr_CallSign"))
+rm(m_wdata)
 
-# Save (full) data file
-save(data, file = "flightdata.rda")
+save(data, file ="fw_data")
 
-# Subset data to a smaller file required by application.
-small <- data[,-c(3, 9, 10:17, 19:30)] # Eliminate columns not required by app
-airport <- c("ATL","BOS","BWI","CLT","DEN","DFW","DTW","EWR","IAH","JFK",
-             "LAS","LAX","LGA","MCO","MSP","ORD","PHX","SEA","SFO","SLC")
-airline <- c("AA", "DL", "UA", "US", "WN")
-small <- filter(small, UNIQUE_CARRIER %in% airline, ORIGIN %in% airport, DEST %in% airport)
+# Create logical variables for weather conditions
+memory.limit(size=4000)
+data <- mutate(data, arr_tstorm = str_detect(arr_CodeSum, "TS"))
+data <- mutate(data, arr_fog = str_detect(arr_CodeSum, "FG"))
+data <- mutate(data, arr_rain = str_detect(arr_CodeSum, ("RA|SH")))
+data <- mutate(data, arr_snow = str_detect(arr_CodeSum, ("SN|SG|PL|IC")))
+data <- mutate(data, dep_tstorm = str_detect(dep_CodeSum, "TS"))
+data <- mutate(data, dep_fog = str_detect(dep_CodeSum, "FG"))
+data <- mutate(data, dep_rain = str_detect(dep_CodeSum, ("RA|SH")))
+data <- mutate(data, dep_snow = str_detect(dep_CodeSum, ("SN|SG|PL|IC")))
 
-# Adjust result so arrival delay > 12 hours are "cancelled"
-for(i in 1:nrow(small)) if(!is.na(small$ARR_DELAY[i]) & small$ARR_DELAY[i] >= 12*60)
-      small$RESULT[i] = "cancelled"
+# Create ONTIME Variable for Logit Model
+data <- mutate(data, ONTIME = (RESULT=="ontime"))
 
-save(small, file="smallfltdata.rda") # Save small for use by the application
+save(data, file ="fw_data")
