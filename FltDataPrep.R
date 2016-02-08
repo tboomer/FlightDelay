@@ -5,6 +5,7 @@
 # the downloaded data files.
 
 library(dplyr)
+library(ggplot2)
 
 # Read and append files from December, 2013 through November, 2014
 # Data files are downloaded by month at the DOT website. The suffix
@@ -14,25 +15,27 @@ library(dplyr)
 # Select the same data fields as flightdata.rda
 
 # Read first file
-monthdat <- read.csv(unzip("T_ONTIME-201401.zip"), header=TRUE)
+monthdat <- read.csv(unzip("./SourceData/T_ONTIME-201406.zip"), header=TRUE)
 data <- monthdat
 print(length(monthdat))
 
 # Read and append data from subsequent files
 print("month columns")
-for(i in 2:12) {
+for(i in 7:12) {
       per <- as.integer(201400 + i)
-      filename <- paste("T_ONTIME-",per, ".zip", sep = "")
+      filename <- paste("./SourceData/T_ONTIME-",per, ".zip", sep = "")
       monthdat <- read.csv(unzip(filename), header=TRUE)
       print(c(i, length(monthdat)))
       data <- rbind(data, monthdat)
 }
+rm(monthdat)
+
 # Convert variable types
 data$FL_DATE <- as.Date(data$FL_DATE, "%Y-%m-%d")
 data$DIVERTED <- as.logical(data$DIVERTED)
 data$CANCELLED <- as.logical(data$CANCELLED)
 
-data$DELAYED <- data$ARR_DELAY > 10 # Create logical variable for delayed
+data$DELAYED <- data$ARR_DELAY > 10 # Set threshold in minutes for "delayed" flight 
 
 # Create RESULT factor variable.
 RESULT <- rep("ontime", nrow(data))
